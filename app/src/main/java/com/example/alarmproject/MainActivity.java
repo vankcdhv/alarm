@@ -6,10 +6,13 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
@@ -24,6 +27,9 @@ public class MainActivity extends AppCompatActivity {
     RecyclerView.Adapter adapter;
     ArrayList<Alarm> list;
     AlertDialog.Builder builder;
+
+    private Intent mServiceIntent;
+    private AlarmService alarmService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,7 +78,23 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(layoutManager);
         Intent serviceIntent = new Intent(this, AlarmService.class);
-        startService(serviceIntent);
+        alarmService = new AlarmService();
+        mServiceIntent = new Intent(this, alarmService.getClass());
+        if (!isMyServiceRunning(alarmService.getClass())) {
+            startService(mServiceIntent);
+        }
+    }
+
+    private boolean isMyServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                Log.i("Service status", "Running");
+                return true;
+            }
+        }
+        Log.i("Service status", "Not running");
+        return false;
     }
 
     public void onClickButtonAdd(View v) {
